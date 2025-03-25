@@ -1,0 +1,259 @@
+;Thomas Vrankar
+;ELE 208
+;Professor Sendag
+;TicTacToe Extra Credit
+
+
+	.ORIG x3000
+START	BRnzp SKIP
+BORED .STRINGZ "\n | | \n-|-|-\n | | \n-|-|-\n | | " 	;board string
+INPRO	.STRINGZ "Please input a number corresponding to the space on the board you would like to place a symbol in >"
+POSITIONS	.FILL #0		;offsets to point to open spaces in array
+	.FILL x3002
+	.FILL x3004
+	.FILL x3006
+	.FILL x300E
+	.FILL x3010
+	.FILL x3012
+	.FILL x301A
+	.FILL x301C
+	.FILL x301E
+X	.FILL x0058
+O	.FILL x004F
+STATE 	.BLKW #10
+SPACE	.FILL x20
+SKIP	AND R2, R2, #0
+	ADD R2, R2, #1	;tracks number of turns
+	LEA R0, BORED	;print board
+	TRAP x22
+
+LOOP	TRAP x23		;prompt
+	AND R0,R0, x000F	;mask all but last 4 bits of input
+	LEA R3, STATE
+	ADD R3, R3, R0	
+	LDR R4, R3, #0
+	BRnp LOOP
+	NOT R2, R2		;flip r2 for X or O
+	STR R2, R3, #0	;put in r3 to check
+	BRp PLAYER2	
+	LD R3, X
+	BRnzp CONT
+PLAYER2	LD R3, O	;r3 contains ascii for correct symbol
+
+CONT	LEA R1, POSITIONS	;check for position
+	ADD R1, R0, R1	
+	LDR R0, R1, #0	;offset in board string
+	STR R3, R0, #0
+	AND R0, R0, #0
+	ADD R0, R0, x000A	;mask
+	TRAP x21		
+	TRAP x21
+	LEA R0, BORED
+	TRAP x22	;output updated string
+	
+	LEA R5, STATE	;r5 contains number of turns taken
+        BRnzp SKIPx
+MIDDLE  LEA R5, STATE	;state clear
+	LDR R4, R5, #0	;point to each number
+	AND R4, R4, #0	;load, clear, store
+	STR R4, R5, #0
+
+	LDR R4, R5, #1
+	AND R4, R4, #0
+	STR R4, R5, #1
+
+	LDR R4, R5, #2
+	AND R4, R4, #0
+	STR R4, R5, #2
+
+	LDR R4, R5, #3
+	AND R4, R4, #0
+	STR R4, R5, #3
+
+	LDR R4, R5, #4
+	AND R4, R4, #0
+	STR R4, R5, #4
+
+	LDR R4, R5, #5
+	AND R4, R4, #0
+	STR R4, R5, #5
+
+	LDR R4, R5, #6
+	AND R4, R4, #0
+	STR R4, R5, #6
+
+	LDR R4, R5, #7
+	AND R4, R4, #0
+	STR R4, R5, #7
+
+	LDR R4, R5, #8
+	AND R4, R4, #0
+	STR R4, R5, #8
+
+	LDR R4, R5, #9
+	AND R4, R4, #0
+	STR R4, R5, #9
+
+	LD R4, SPACE
+	ADD R2, R2, #11
+	LEA R5, POSITIONS
+TARGET	ADD R5, R5, #1
+	LDR R3, R5, #0
+	STR R4, R3, #0
+	ADD R2, R2, #-1
+	BRp TARGET
+	
+	BRnzp START
+	
+	
+SKIPx	AND R3, R3, #0	;checks for win combos i.e. 123, 456, 789, 147, 258......
+	LDR R4, R5, #1	;win for player 1 = -6 win for player 2 = 3 because NOT of 1 = -2
+	ADD R3, R4, R3	;get values of each char in state
+	LDR R4, R5, #2
+	ADD R3, R4, R3
+	LDR R4, R5, #3
+	ADD R3, R4, R3
+	ADD R1, R3, #6	;if 3 x in a row or 3 o in a row go to win
+	BRz WIN
+	ADD R1, R3, #-3
+	BRz WIN
+
+	AND R3, R3, #0
+	LDR R4, R5, #1
+	ADD R3, R4, R3
+	LDR R4, R5, #4
+	ADD R3, R4, R3
+	LDR R4, R5, #7
+	ADD R3, R4, R3
+	ADD R1, R3, #6
+	BRz WIN
+	ADD R1, R3, #-3
+	BRz WIN
+
+	AND R3, R3, #0
+	LDR R4, R5, #2
+	ADD R3, R4, R3
+	LDR R4, R5, #5
+	ADD R3, R4, R3
+	LDR R4, R5, #8
+	ADD R3, R4, R3
+	ADD R1, R3, #6
+	BRz WIN
+	ADD R1, R3, #-3
+	BRz WIN
+
+	AND R3, R3, #0
+	LDR R4, R5, #3
+	ADD R3, R4, R3
+	LDR R4, R5, #6
+	ADD R3, R4, R3
+	LDR R4, R5, #9
+	ADD R3, R4, R3
+	ADD R1, R3, #6
+	BRz WIN
+	ADD R1, R3, #-3
+	BRz WIN
+
+	AND R3, R3, #0
+	LDR R4, R5, #4
+	ADD R3, R4, R3
+	LDR R4, R5, #5
+	ADD R3, R4, R3
+	LDR R4, R5, #6
+	ADD R3, R4, R3
+	ADD R1, R3, #6
+	BRz WIN
+	ADD R1, R3, #-3
+	BRz WIN
+
+	AND R3, R3, #0
+	LDR R4, R5, #7
+	ADD R3, R4, R3
+	LDR R4, R5, #8
+	ADD R3, R4, R3
+	LDR R4, R5, #9
+	ADD R3, R4, R3
+	ADD R1, R3, #6
+	BRz WIN
+	ADD R1, R3, #-3
+	BRz WIN
+
+	AND R3, R3, #0
+	LDR R4, R5, #1
+	ADD R3, R4, R3
+	LDR R4, R5, #5
+	ADD R3, R4, R3
+	LDR R4, R5, #9
+	ADD R3, R4, R3
+	ADD R1, R3, #6
+	BRz WIN
+	ADD R1, R3, #-3
+	BRz WIN
+
+	AND R3, R3, #0
+	LDR R4, R5, #3
+	ADD R3, R4, R3
+	LDR R4, R5, #5
+	ADD R3, R4, R3
+	LDR R4, R5, #7
+	ADD R3, R4, R3
+	ADD R1, R3, #6
+	BRz WIN
+	ADD R1, R3, #-3
+	BRz WIN
+
+	LDR R4, R5, #1 	;check for tie/filled board with no win
+	BRz LOOP
+	LDR R4, R5, #2
+	BRz LOOP
+	LDR R4, R5, #3
+	BRz LOOP
+	LDR R4, R5, #4
+	BRz LOOP
+	LDR R4, R5, #5
+	BRz LOOP
+	LDR R4, R5, #6
+	BRz LOOP
+	LDR R4, R5, #7
+	BRz LOOP
+	LDR R4, R5, #8
+	BRz LOOP
+	LDR R4, R5, #9
+	BRz LOOP
+
+	BRnzp TIE
+	
+WIN 	AND R3, R3, R3	
+	BRnzp SKIP2
+XMESS	.STRINGZ " PLAYER 1 WINS!"	
+OMESS	.STRINGZ " PLAYER 2 WINS!"
+TIEMESS	.STRINGZ " TIE"
+PLAYAGAIN 	.STRINGZ "\n Would you like to play again? (Y/N) "
+SUBTRACT	.FILL x-59
+CASECHECK	.FILL x-20
+SKIP2	BRn XWIN	
+OWIN	LEA R0, OMESS	;print player 2 win mess
+	TRAP x22
+	BRnzp DONE
+	
+XWIN	LEA R0, XMESS	;print player 1 win mess
+	TRAP x22
+	BRnzp DONE
+
+TIE 	LEA R0, TIEMESS	;print tie message
+	TRAP x22
+	BRnzp DONE	
+	
+DONE 	LD R1, SUBTRACT	
+	LD R5, CASECHECK
+	LEA R0, PLAYAGAIN
+	TRAP x22		;play again message
+	TRAP x23
+	ADD R5, R5, R0	;check for lower/uppercase
+	ADD R5, R1, R5
+	BRz MIDDLE		;if y/Y clear board (at middle)
+	ADD R0, R1, R0
+	BRz MIDDLE
+
+	HALT
+	.END
