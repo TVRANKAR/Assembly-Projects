@@ -1,0 +1,273 @@
+#s0 is original array size
+#s1 is memory location of original array
+#a1 is size of array 1
+#a2 is size of array 2
+#t0 is pointer to original array 
+#t1 is pointer to array 1
+#t2 is pointer to array 2
+#s2 is current value from array 1
+#s3 is current value from array 2
+#s4 is width of subarray
+
+	.data
+array:	.word	10, 67, 5, 7, 15, 13, 23, 3, 26, 5, 18, 50, 13, 75, 1, 29, 16
+size:	.word 68
+original_array: .asciiz "Original Array:"
+next_iteration: .asciiz "Next Iteration:"
+sorted_array: .asciiz "Sorted Array:"
+
+.text
+.globl main
+.ent main
+main:
+	la $t3, array
+	lui $v1, 0x1001    # Load upper 16 bits of the immediate value (e.g., 0xABCD0000)
+	ori $v1, $v1, 0x0000  # Load lower 16 bits of the immediate value (e.g., 0x0000EF01)
+	add $t2, $zero, $v1  # Add the immediate value to register $t0
+	lw $s7, size
+	lui $v1, 0x1001    # Load upper 16 bits of the immediate value (e.g., 0xABCD0000)
+	ori $v1, $v1, 0x0000  # Load lower 16 bits of the immediate value (e.g., 0x0000EF01)
+	add $t0, $zero, $v1  # Add the immediate value to register $t0
+loopto:
+	
+	beq $s7, $zero, mergesort	#this loop copies the values of array from wherever they are to 10010000
+	lw $t1, 0($t3)				#remakes the location as operable, and assigns a real place in memory
+	sw $t1, 0($t2)				#simple copying loop
+	addi $t2, $t2, 4			#incement pointers until size has been decreased to zero
+	addi $t3, $t3, 4			#unable to branch on a constant like size
+	addi $s7, $s7, -4
+	j loopto
+
+mergesort:
+	lui $v1, 0x1001    # Load upper 16 bits of the immediate value (e.g., 0xABCD0000)
+	ori $v1, $v1, 0x0000  # Load lower 16 bits of the immediate value (e.g., 0x0000EF01)
+	add $t0, $zero, $v1  # Add the immediate value to register $t0
+	add $t5, $t0, $zero
+	li $v0, 4				#clear from here
+	la $a0, original_array
+	syscall
+	li $v0, 11
+	addi $a0, $zero, 0xd
+	syscall
+printloop1:								#just the loop to print original array
+										#explained below in printloop2
+	#beq $a3, $t5, printskip1
+	lw $a3, size
+	add $a3, $t0, $a3
+	li $v0, 1
+	lw $a0, 0($t5)
+	syscall
+	addi $a0, $zero, 0x2c
+	li $v0, 11
+	syscall
+	
+	addi $t5, $t5, 4
+	bne $a3, $t5, printloop1
+	li $v0, 11
+	addi $a0, $zero, 0xd
+	syscall		
+	printskip1:				#to here
+	addi $s4, $zero, 4
+	lw $s0, size
+	#sll $s0, $s0, 2
+	lui $v1, 0x1001    # Load upper 16 bits of the immediate value (e.g., 0xABCD0000)
+	ori $v1, $v1, 0x0000  # Load lower 16 bits of the immediate value (e.g., 0x0000EF01)
+	add $s1, $zero, $v1  # Add the immediate value to register $t0
+		#set width of subarray to one (do not jump here)
+
+copyoriginalarray:					#this loop puts the original array at 10010000 into 10020000 to be altered and merged
+	add $t3, $s1, $s0 
+	add $t4, $s1, $zero
+loopthree:		#original array into new array for changes
+	beq $t3, $t4, mergeSortReal
+	lw $s6, 0($t4)
+	addi $t4, $t4, 0x7000				#increment x10000 before placing number
+	addi $t4, $t4, 0x7000				#this loop must be called between each iteration of sort
+	addi $t4, $t4, 0x2000				#merge function relies on array at 10010000 to be sorted into 10020000
+	sw $s6, 0($t4)
+	addi $t4, $t4, -0x7000
+	addi $t4, $t4, -0x7000
+	addi $t4, $t4, -0x2000
+	addi $t4, $t4, 4
+	
+	
+	
+	j loopthree
+
+mergeSortReal:	
+	
+	lui $v1, 0x1001    # Load upper 16 bits of the immediate value (e.g., 0xABCD0000)
+	ori $v1, $v1, 0x0000  # Load lower 16 bits of the immediate value (e.g., 0x0000EF01)
+	add $t0, $zero, $v1  # Add the immediate value to register $t0
+	add $t5, $t0, $zero
+	li $v0, 4				#clear from here
+	la $a0, next_iteration
+	syscall
+	li $v0, 11
+	addi $a0, $zero, 0xd
+	syscall
+printloop2:								#here is the loop to print the next iteration ofthe array
+										#checks for equality of end point and base pointer
+	#beq $a3, $t5, printskip2			#maintains t0 as 10010000
+										#other registers are entirely unused elsewhere
+	lw $a3, size						
+	add $a3, $t0, $a3
+	li $v0, 1
+	lw $a0, 0($t5)
+	syscall
+	addi $a0, $zero, 0x2c
+	li $v0, 11
+	syscall
+	
+	addi $t5, $t5, 4					#increment pointer here
+	bne $a3, $t5, printloop2
+	li $v0, 11
+	addi $a0, $zero, 0xd
+	syscall		
+	printskip2:				#to here
+	
+						#subtract width of subarrays until no more space, and put correct sizes into each size register
+	lui $v1, 0x1002    # Load upper 16 bits of the immediate value (e.g., 0xABCD0000)
+	ori $v1, $v1, 0x0000  # Load lower 16 bits of the immediate value (e.g., 0x0000EF01)
+	add $t4, $zero, $v1  # Add the immediate value to register $t0
+
+
+		#lui $v1, 0x1002    # Load upper 16 bits of the immediate value (e.g., 0xABCD0000)
+	#ori $v1, $v1, 0x0000  # Load lower 16 bits of the immediate value (e.g., 0x0000EF01)
+	#add $t2, $zero, $v1  # Add the immediate value to register $t0
+					#s5 contains doubled mid size
+	sll $s5, $s4, 1			#set original pointer to 3000 and extra temp to 4000-t4 is changed per array
+	and $t3, $s0, $s0		
+	
+	and $t1, $t4, $t4		#t4 contains location of copy array to sort
+	add $t4, $t4, $s4		#array1 gets first location, array2 gets second
+	and $t2, $t4, $t4		#must be outside loop
+mergeSortLoop:
+	
+	sub $t3, $t3, $s5		#t3 conatains remainder of size of original and 2*m
+	blez $t3, skip			#t3=t3-s5
+	and $a1, $s4, $s4		#as long as t3 is positive, subarrays are same size
+	and $a2, $s4, $s4		#when t3 is no longer positive, size must be addressed separately (see skip)
+	
+	jal merge				#call merge
+	add $t1, $t1, $s4		#new subarray pointers for next iteration of merge
+	add $t2, $t2, $s4
+	j mergeSortLoop
+	
+skip:
+	add $t6, $t3, $s4		#if array 1 is full and array 2 is smaller than usual, add size back to t3 to find size of a2
+	bgez $t6, skip2			#ex. total size is 13 and s is 4, last merge would result in t3 being -3
+	add $t7, $t3, $s5		#adding subarray size would return 1, meaning size of a2 must be 1
+	and $a1, $t7, $t7		#works for 0
+	and $a2, $zero, $zero	#if a1 is incomplete, add 2*s to t3, resulting in assigned value for a1. 
+	j mergeandloop			#a2 becomes zero
+
+skip2:
+	and $a1, $s4, $s4		#if remainder in t3 is zero or less, meaning end of large array
+	add $t3, $s4, $t3		#a1 is still the same size
+	and $a2, $t3, $t3		#a2 becomes size of remainder		
+					#if remainder exactly 0 (meaning perfect power of 2) then size will become size of subarray
+	#and $t1, $t4, $t4		#t4 is to be unchanged for duration of loop
+	#add $t4, $t4, $s4		#add value of size to 
+	#and $t2, $t4, $t4
+
+mergeandloop:
+	jal merge
+	sll $s4, $s4, 1
+	bge $s4, $s0, endmerge
+	lui $v1, 0x1001    # Load upper 16 bits of the immediate value (e.g., 0xABCD0000)
+	ori $v1, $v1, 0x0000  # Load lower 16 bits of the immediate value (e.g., 0x0000EF01)
+	add $t0, $zero, $v1  # Add the immediate value to register $t0
+	
+	
+	j copyoriginalarray
+
+endmerge:
+	lui $v1, 0x1001    # Load upper 16 bits of the immediate value (e.g., 0xABCD0000)
+	ori $v1, $v1, 0x0000  # Load lower 16 bits of the immediate value (e.g., 0x0000EF01)
+	add $t0, $zero, $v1  # Add the immediate value to register $t0
+	add $t5, $t0, $zero
+	li $v0, 4
+	la $a0, sorted_array
+	syscall
+	li $v0, 11
+	addi $a0, $zero, 0xd
+	syscall
+printloop:							#this loop prints final answer
+									#same conceptually as both loops above
+	beq $a3, $t5, printskip
+	lw $a3, size
+	add $a3, $t0, $a3
+	li $v0, 1
+	lw $a0, 0($t5)
+	syscall
+	addi $a0, $zero, 0x2c
+	li $v0, 11
+	syscall
+	
+	addi $t5, $t5, 4
+	j printloop
+	li $v0, 11
+	addi $a0, $zero, 0xd
+	syscall
+printskip:
+	li $v0, 10					#exit code
+	syscall
+.end main
+		
+
+	
+	.globl merge
+
+merge:
+	add $t7, $t1, $a1			#t7 contains endpoint of array1
+	add $t6, $t2, $a2			#t6 contains endpoint of array2
+sort:
+	beq $t1, $t7, copyarray2	#if one array has reached end, continue to next array
+	beq $t2, $t6, copyarray1	#copy next array fully
+
+	lw $s2, 0($t1)				#get value from array 1 and 2
+	lw $s3, 0($t2)
+	ble $s2, $s3, array1greater		#conditonal based on values in array 1 and array 2
+	
+	sw $s3, 0($t0)				#put value back into original array as sorted
+	addi $t2, $t2, 4
+	addi $t0, $t0, 4
+	j sort
+
+array1greater:
+	sw $s2, 0($t0)				#from array 2
+	addi $t1, $t1, 4
+	addi $t0, $t0, 4
+	j sort
+
+copyarray2:
+	lw $s3, 0($t2)			
+	sw $s3, 0($t0)
+	addi $t2, $t2, 4
+	addi $t0, $t0, 4		#copy remaining array after first has been done, effectively finsihing the sort
+	beq $t2, $t6, mergeexit
+	
+	
+	j copyarray2
+
+copyarray1:
+	lw $s2, 0($t1)
+	sw $s2, 0($t0)
+	addi $t1, $t1, 4
+	addi $t0, $t0, 4
+	beq $t1, $t7, mergeexit
+	
+	
+	j copyarray1
+
+mergeexit:
+	j $ra				#jump out
+
+.end merge
+                     
+
+
+
+
+
